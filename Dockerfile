@@ -53,7 +53,7 @@ RUN sed -ri -e 's!/var/www/!${WEB_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /e
 # enable a2enmod rewrite
 RUN a2enmod rewrite
 
-# Rename config files
+# Rename config files to be fix order (PSR needs to be loaded before Phalcon, inis loaded in alphabetical order...)
 RUN mv '/usr/local/etc/php/conf.d/docker-php-ext-psr.ini' '/usr/local/etc/php/conf.d/docker-php-ext-phalcon-psr.ini'
 
 COPY bin/*.sh /opt/docker/provision/entrypoint.d/
