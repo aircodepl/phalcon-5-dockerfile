@@ -30,9 +30,9 @@ services:
       - ./conf/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: aircodeblog
-      MYSQL_USER: aircodeblog
-      MYSQL_PASSWORD: aircodeblog
+      MYSQL_DATABASE: appdb
+      MYSQL_USER: appdb
+      MYSQL_PASSWORD: appdb
 
   memcached:
     container_name: memcached
