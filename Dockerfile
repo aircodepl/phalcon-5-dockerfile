@@ -3,8 +3,7 @@ ENV PROVISION_CONTEXT "development"
 ENV WEB_DOCUMENT_ROOT=/var/www/html/public
 
 ARG PSR_VERSION=1.1.0
-ARG PHALCON_VERSION=5.0.0alpha5
-ARG PHALCON_EXT_PATH=phalcon
+ARG PHALCON_VERSION=5.0.0alpha6
 
 # Install Git
 RUN apt-get update && \
@@ -28,8 +27,8 @@ RUN pecl install memcached redis
 RUN echo extension=memcached.so >> /usr/local/etc/php/conf.d/memcached.ini
 RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 
-RUN pecl install psr-1.1.0
-RUN pecl install phalcon-5.0.0alpha6
+RUN pecl install psr-${PSR_VERSION}
+RUN pecl install phalcon-${PHALCON_VERSION}
 
 RUN echo extension=psr.so >> /usr/local/etc/php/conf.d/phalcon_psr.ini
 RUN echo extension=phalcon.so >> /usr/local/etc/php/conf.d/phalcon.ini
