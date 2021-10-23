@@ -1,34 +1,10 @@
-FROM php:8.0.0-apache
+FROM php:8.0-apache
 ENV PROVISION_CONTEXT "development"
 ENV WEB_DOCUMENT_ROOT=/var/www/html/public
 
 ARG PSR_VERSION=1.1.0
-ARG PHALCON_VERSION=5.0.0alpha3
-ARG PHALCON_EXT_PATH=phalcon/safe
-
-# Install PSR + Phalcon based on https://github.com/MilesChou/docker-phalcon/blob/master/7.4/apache/Dockerfile
-RUN set -xe && \
-        # Download PSR, see https://github.com/jbboehr/php-psr
-        curl -LO https://github.com/jbboehr/php-psr/archive/v${PSR_VERSION}.tar.gz && \
-        tar xzf ${PWD}/v${PSR_VERSION}.tar.gz && \
-        # Download Phalcon
-        curl -LO https://github.com/phalcon/cphalcon/archive/v${PHALCON_VERSION}.tar.gz && \
-        tar xzf ${PWD}/v${PHALCON_VERSION}.tar.gz && \
-        docker-php-ext-install -j $(getconf _NPROCESSORS_ONLN) \
-            ${PWD}/php-psr-${PSR_VERSION} \
-            ${PWD}/cphalcon-${PHALCON_VERSION}/build/${PHALCON_EXT_PATH} \
-        && \
-        # Remove all temp files
-        rm -r \
-            ${PWD}/v${PSR_VERSION}.tar.gz \
-            ${PWD}/php-psr-${PSR_VERSION} \
-            ${PWD}/v${PHALCON_VERSION}.tar.gz \
-            ${PWD}/cphalcon-${PHALCON_VERSION} \
-        && \
-        php -m \
-
-COPY docker-phalcon-* /usr/local/bin/
-# Installing PSR + Phalcon ends here.
+ARG PHALCON_VERSION=5.0.0alpha5
+ARG PHALCON_EXT_PATH=phalcon
 
 # Install Git
 RUN apt-get update && \
@@ -43,6 +19,21 @@ RUN apt-get install -y libzip-dev zip \
 RUN docker-php-ext-install pdo_mysql \
     && docker-php-ext-enable pdo_mysql
 
+# Install memcached and redis
+RUN apt-get install -y libmemcached-dev
+
+RUN pecl channel-update pecl.php.net
+RUN pecl install memcached redis
+
+RUN echo extension=memcached.so >> /usr/local/etc/php/conf.d/memcached.ini
+RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
+
+RUN pecl install psr-1.1.0
+RUN pecl install phalcon-5.0.0alpha6
+
+RUN echo extension=psr.so >> /usr/local/etc/php/conf.d/phalcon_psr.ini
+RUN echo extension=phalcon.so >> /usr/local/etc/php/conf.d/phalcon.ini
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
@@ -52,8 +43,5 @@ RUN sed -ri -e 's!/var/www/!${WEB_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /e
 
 # enable a2enmod rewrite
 RUN a2enmod rewrite
-
-# Rename config files to fix order (PSR needs to be loaded before Phalcon, inis loaded in alphabetical order...)
-RUN mv '/usr/local/etc/php/conf.d/docker-php-ext-psr.ini' '/usr/local/etc/php/conf.d/docker-php-ext-phalcon-psr.ini'
 
 COPY bin/*.sh /opt/docker/provision/entrypoint.d/
